@@ -1,44 +1,35 @@
-volatile byte ledState = HIGH;
-unsigned long duration;
-volatile unsigned long pulseCount;
-const byte interruptPin = 9;
+int ledPin = 13;
+int sensePin = 8;
+volatile int value = 0;
+
+// Install the interrupt routine.
+ISR(INT6_vect) {
+    value = digitalRead(sensePin);
+}
 
 void setup() {
-
-  //turn on internal LED for no real reason
-  pinMode(LED_BUILTIN, OUTPUT);
-
-
-  
-  digitalWrite(LED_BUILTIN, ledState);
-
- 
-  pinMode(interruptPin, INPUT_PULLUP);
-  attachInterrupt(9, handlePulse, CHANGE);
-  pulseCount = 0;
-
-  
   Serial.begin(9600);
-  Serial.println("setting up");
+  Serial.println("Initializing ihandler");
+  pinMode(ledPin, OUTPUT);
+  pinMode(sensePin, INPUT);
+  Serial.println("Processing initialization");
+
+  // Global Enable INT0 interrupt
+  EIMSK |= ( 1 << INT6);
+  // Signal change triggers interrupt
+  MCUCR |= ( 1 << ISC00);
+  MCUCR |= ( 0 << ISC01);
+  Serial.println("Finished initialization");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  //digitalWrite(LED_BUILTIN, ledState);
-
-
-  duration = pulseIn(interruptPin, HIGH);
-
-  //Serial.println(duration);
-
-  Serial.println(pulseCount);
+  if (value) {
+    Serial.println("Value high!");
+    digitalWrite(ledPin, HIGH);
+  } else {
+    Serial.println("Value low!");
+    digitalWrite(ledPin, LOW);
+  }
   delay(100);
-  
-}
-
-void handlePulse() {
-  //Serial.println("handling pulse");
-  //ledState = !ledState;
-  pulseCount++;
 }
 
