@@ -1,11 +1,11 @@
 int ledPin = 13;
-int sensePin = 8;
+int sensePin = 9;
 volatile int previousValue = 0;
 volatile byte newValue = 1;
 volatile unsigned long counter = 0;
 
 // Install the interrupt routine.
-ISR(INT6_vect) {
+ISR(INT7_vect) {
   newValue = !newValue;
   counter++;
 }
@@ -19,11 +19,11 @@ void setup() {
 
     
   // Signal change triggers interrupt
-  EICRB |= ( 1 << ISC61);
-  EICRB |= ( 0 << ISC60);
+  EICRB |= ( 1 << ISC71);
+  EICRB |= ( 0 << ISC70);
 
   // Global Enable INT6 interrupt
-  EIMSK |= ( 1 << INT6);
+  EIMSK |= ( 1 << INT7);
 
   
   Serial.println("Finished initialization");
