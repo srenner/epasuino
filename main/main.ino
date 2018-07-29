@@ -1,37 +1,30 @@
 int ledPin = 13;
-int sensePin = 9;
-volatile int previousValue = 0;
-volatile byte newValue = 1;
-volatile unsigned long counter = 0;
+int vssPin = 9; //pin 9 corresponds to interrupt 7 on the chip
+volatile unsigned long vssCounter = 0;
 
-// Install the interrupt routine.
+//interrupt routine for interrupt 7 (pin 9)
 ISR(INT7_vect) {
-  newValue = !newValue;
-  counter++;
+  vssCounter++;
 }
 
 void setup() {
   Serial.begin(9600);
   //Serial.println("Initializing ihandler");
   pinMode(ledPin, OUTPUT);
-  pinMode(sensePin, INPUT_PULLUP);
-  //Serial.println("Processing initialization");
-
+  pinMode(vssPin, INPUT_PULLUP);
     
-  // Signal change triggers interrupt
+  //set trigger for interrupt 7 (pin 9) to be falling edge
   EICRB |= ( 1 << ISC71);
   EICRB |= ( 0 << ISC70);
 
-  // Global Enable INT6 interrupt
+  //enable interrupt 7 (pin 9)
   EIMSK |= ( 1 << INT7);
-
   
   Serial.println("Finished initialization");
 }
 
 void loop() {
-  //digitalWrite(ledPin, newValue);
-  Serial.println(counter);
+  Serial.println(vssCounter);
   delay(250);
 }
 
