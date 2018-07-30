@@ -6,12 +6,9 @@ int vssPin = 9;                                 //pin 9 on the board corresponds
 volatile unsigned long vssCounter = 0;          //increment pulses in the interrupt function
 unsigned long vssCounterPrevious = 0;           //used to calculate speed
 unsigned long currentMillis = 0;                //now
-byte speedCalcInterval = 125;                   //read number of pulses within this timespan to calculate speed
 unsigned long lastMillis = 0;                   //used to cut time into slices of speedCalcInterval
-//float previousMilesPerHour = 0.0;
-//float currentMilesPerHour = 0.0;
-//float smoothedMilesPerHour = 0.0;
-float mphBuffer[8];
+byte speedCalcInterval = 125;                   //read number of pulses approx 8 times per second
+float mphBuffer[4];                             //keep buffer of mph readings (approx .5 second)
 
 //interrupt routine for interrupt 7 (pin 9)
 ISR(INT7_vect) {
@@ -48,7 +45,7 @@ void loop() {
     //calculate miles per hour
     float pulsesPerSecond = (float)pulses * ((float)1000 / ((float)currentMillis - (float)lastMillis));
     float pulsesPerMinute = pulsesPerSecond * 60.0;
-    float pulsesPerHour = pulsesPerMinute * 60;
+    float pulsesPerHour = pulsesPerMinute * 60.0;
 
     //previousMilesPerHour = currentMilesPerHour;
     
