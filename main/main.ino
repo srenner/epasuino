@@ -1,4 +1,6 @@
 //datasheet at https://github.com/Atlantis-Specialist-Technologies/CAN485/blob/master/Documentation/Datasheet%20AT90CANXX.pdf
+#include <ASTCanLib.h>  
+
 
 unsigned const int PULSES_PER_MILE = 8000;                  //typical early Ford sensor
 int const VSS_PIN = 9;                                      //pin 9 on the board corresponds to interrupt 7 on the chip
@@ -63,6 +65,7 @@ void loop() {
     }
     float smoothedMPH = mphSum / (float)BUFFER_LENGTH;
     Serial.println(smoothedMPH);
+    sendToCan(smoothedMPH);
     lastMillis = currentMillis;
   }
 }
@@ -71,7 +74,7 @@ void calculateSpeed() {
   
 }
 
-void sendToCan() {
+void sendToCan(float mph) {
   //send vssCounter on the CAN bus to be interpreted as an odometer reading
   //send calculated speed on the CAN bus
 }
