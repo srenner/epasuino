@@ -7,6 +7,9 @@ Typical aftermarket electric power assist steering (EPAS) kits for automobiles u
 
 This project has a secondary purpose of taking the speed sensor info and sending it on the CAN bus to a MegaSquirt ECU and my [carfuino performance computer](https://github.com/srenner/carfuino).
 
+## User Interface
+The user has access to a slide switch and a knob. When the switch is ON, the software will automatically set the assist level. When the switch is OFF, the user will adjust the knob to set the assist level.
+
 ## Hardware details
 * [SparkFun AST-CAN485 Dev Board](https://www.sparkfun.com/products/14483)
 * [Ford 8,000 pulse per mile speed sensor](https://lmr.com/item/LRS-9731B/83-93-Mustang-Speed-Sensor)
