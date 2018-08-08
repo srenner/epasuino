@@ -3,7 +3,9 @@
 
 
 unsigned const int PULSES_PER_MILE = 8000;                  //typical early Ford sensor
-int const VSS_PIN = 9;                                      //pin 9 on the board corresponds to interrupt 7 on the chip
+byte const MODE_PIN = 8;                                    //switch to select auto or manual potentiometer control
+bool automaticMode = 0;                                     //1 = automatic (speed sensitive), 0 = manual (user turns knob)
+byte const VSS_PIN = 9;                                     //pin 9 on the board corresponds to interrupt 7 on the chip
 volatile unsigned long vssCounter = 0;                      //increment pulses in the interrupt function
 unsigned long vssCounterPrevious = 0;                       //used to calculate speed
 unsigned long currentMillis = 0;                            //now
@@ -21,7 +23,7 @@ ISR(INT7_vect) {
 void setup() {
   Serial.begin(9600);
   pinMode(VSS_PIN, INPUT_PULLUP);
-    
+  pinMode(MODE_PIN, INPUT);    
   //set trigger for interrupt 7 (pin 9) to be falling edge (see datasheet)
   EICRB |= ( 1 << ISC71);
   EICRB |= ( 0 << ISC70);
@@ -36,14 +38,15 @@ void loop() {
 
   currentMillis = millis();
 
+  automaticMode = digitalRead(MODE_PIN);
+
+  Serial.println(automaticMode);
+  
   //perform speed calculation on an interval of SPEED_CALC_INTERVAL
   if(currentMillis - lastMillis >= SPEED_CALC_INTERVAL && currentMillis > 500) {
 
     long pulses = vssCounter - vssCounterPrevious;
     vssCounterPrevious = vssCounter;
-    
-    //Serial.print("total pulses: ");
-    //Serial.println(vssCounter);
 
     //calculate miles per hour
     float pulsesPerSecond = (float)pulses * ((float)1000 / ((float)currentMillis - (float)lastMillis));
@@ -64,7 +67,7 @@ void loop() {
       mphSum += mphBuffer[i];
     }
     float smoothedMPH = mphSum / (float)BUFFER_LENGTH;
-    Serial.println(smoothedMPH);
+    //Serial.println(smoothedMPH);
     sendToCan(smoothedMPH);
     lastMillis = currentMillis;
   }
