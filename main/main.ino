@@ -17,6 +17,7 @@ byte bufferIndex = 0;
 byte const KNOB_PIN = 14;                                   //a0
 byte knobBufferIndex = 0;
 int knobPosition = 0;
+int previousKnobPosition = 0;
 byte const KNOB_BUFFER_LENGTH = 100;
 int knobBuffer[KNOB_BUFFER_LENGTH];
 
@@ -65,9 +66,14 @@ void loop() {
   if(knobPosition > 250) {
     knobPosition = 255;
   }
-  //knobPosition = (((knobSum / KNOB_BUFFER_LENGTH) + 10) / 10) * 10;
-  //knobPosition = map(knobPosition, 0, 1030, 0, 255);
-  //knobPosition = ((knobPosition + 5) / 5) * 5;
+
+  if(abs(knobPosition - previousKnobPosition) < 5) {
+    //knob position didn't actually change
+    knobPosition = previousKnobPosition;
+  }
+  else {
+    previousKnobPosition = knobPosition;
+  }
   
   //perform speed calculation on an interval of SPEED_CALC_INTERVAL
   if(currentMillis - lastMillis >= SPEED_CALC_INTERVAL && currentMillis > 500) {
