@@ -1,6 +1,6 @@
 //datasheet at https://github.com/Atlantis-Specialist-Technologies/CAN485/blob/master/Documentation/Datasheet%20AT90CANXX.pdf
-#include <ASTCanLib.h>  
-
+#include <ASTCanLib.h>
+#include <math.h>
 
 unsigned const int PULSES_PER_MILE = 8000;                  //typical early Ford sensor
 byte const MODE_PIN = 8;                                    //switch to select auto or manual potentiometer control
@@ -17,8 +17,8 @@ byte bufferIndex = 0;
 byte const KNOB_PIN = 14;                                   //a0
 byte knobBufferIndex = 0;
 int knobPosition = 0;
-byte const KNOB_BUFFER_LENGTH = 16;
-int knobBuffer[KNOB_BUFFER_LENGTH] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+byte const KNOB_BUFFER_LENGTH = 100;
+int knobBuffer[KNOB_BUFFER_LENGTH];
 
 //interrupt routine for interrupt 7 (pin 9)
 ISR(INT7_vect) {
@@ -53,13 +53,21 @@ void loop() {
   }
   knobPosition = analogRead(KNOB_PIN);
   knobBuffer[knobBufferIndex] = knobPosition;
-  int knobSum = 0;
+  long knobSum = 0;
   for(int i = 0; i < KNOB_BUFFER_LENGTH; i++) {
     knobSum += knobBuffer[i];
   }
   knobPosition = knobSum / KNOB_BUFFER_LENGTH;
-  //knobPosition = map(knobPosition, 0, 1023, 0, 255);
-
+  knobPosition = map(knobPosition, 0, 1023, 0, 255);
+  if(knobPosition < 5) {
+    knobPosition = 0;
+  }
+  if(knobPosition > 250) {
+    knobPosition = 255;
+  }
+  //knobPosition = (((knobSum / KNOB_BUFFER_LENGTH) + 10) / 10) * 10;
+  //knobPosition = map(knobPosition, 0, 1030, 0, 255);
+  //knobPosition = ((knobPosition + 5) / 5) * 5;
   
   //perform speed calculation on an interval of SPEED_CALC_INTERVAL
   if(currentMillis - lastMillis >= SPEED_CALC_INTERVAL && currentMillis > 500) {
