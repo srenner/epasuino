@@ -15,8 +15,10 @@ byte const BUFFER_LENGTH = 4;                               //store this instead
 float mphBuffer[BUFFER_LENGTH] = {0.0f, 0.0f, 0.0f, 0.0f};  //keep buffer of mph readings (approx .5 second)
 byte bufferIndex = 0;
 byte const KNOB_PIN = 14;                                   //a0
+byte knobBufferIndex = 0;
 int knobPosition = 0;
-int knobBuffer[BUFFER_LENGTH] = {0,0,0,0};                  //keep buffer of potentiometer readings (approx .5 second)
+byte const KNOB_BUFFER_LENGTH = 16;
+int knobBuffer[KNOB_BUFFER_LENGTH] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 //interrupt routine for interrupt 7 (pin 9)
 ISR(INT7_vect) {
@@ -43,12 +45,26 @@ void loop() {
 
   automaticMode = digitalRead(MODE_PIN);
 
+  if(knobBufferIndex >= KNOB_BUFFER_LENGTH - 1) {
+    knobBufferIndex = 0;
+  }
+  else {
+    knobBufferIndex++;
+  }
+  knobPosition = analogRead(KNOB_PIN);
+  knobBuffer[knobBufferIndex] = knobPosition;
+  int knobSum = 0;
+  for(int i = 0; i < KNOB_BUFFER_LENGTH; i++) {
+    knobSum += knobBuffer[i];
+  }
+  knobPosition = knobSum / KNOB_BUFFER_LENGTH;
+  //knobPosition = map(knobPosition, 0, 1023, 0, 255);
 
   
   //perform speed calculation on an interval of SPEED_CALC_INTERVAL
   if(currentMillis - lastMillis >= SPEED_CALC_INTERVAL && currentMillis > 500) {
 
-
+    Serial.println(knobPosition);
     
     long pulses = vssCounter - vssCounterPrevious;
     vssCounterPrevious = vssCounter;
@@ -77,16 +93,7 @@ void loop() {
     lastMillis = currentMillis;
 
 
-    knobPosition = analogRead(KNOB_PIN);
-    knobBuffer[bufferIndex] = knobPosition;
-    int knobSum = 0;
-    for(int i = 0; i < BUFFER_LENGTH; i++) {
-      knobSum += knobBuffer[i];
-    }
-    int smoothedKnobPosition = knobSum / BUFFER_LENGTH;
 
-    
-    Serial.println(smoothedKnobPosition);
   }
 }
 
