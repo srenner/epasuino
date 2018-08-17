@@ -1,6 +1,6 @@
 # epasuino
 
-**EPAS** + ard**UINO** = epasuino. Pronounced "eh-puh-sween-oh." Or however you want. I don't care. Speed sensitive power steering for automobiles.
+**EPAS** + ard**UINO** = epasuino. Pronounced "eh-puh-sween-oh." Or however you want. Speed sensitive power steering for automobiles.
 
 ## Overview
 Typical aftermarket electric power assist steering (EPAS) kits for automobiles use an adjustment knob to tailor how much power assist to provide to the steering system. The user turns the knob up in parking lots, and turns it down on the highway, or selects a middle ground that's ok for every scenario, but rarely ideal. epasuino uses the speed of the vehicle to adjust the amount of assist.
