@@ -2,6 +2,7 @@
 #include <ASTCanLib.h>
 #include <math.h>
 
+#define DEBUG true
 unsigned const int PULSES_PER_MILE = 8000;                  //typical early Ford sensor
 byte const MODE_PIN = 8;                                    //switch to select auto or manual potentiometer control
 bool automaticMode = 0;                                     //1 = automatic (speed sensitive), 0 = manual (user turns knob)
@@ -41,11 +42,50 @@ void setup() {
 }
 
 void loop() {
-
   currentMillis = millis();
-
   automaticMode = digitalRead(MODE_PIN);
+  byte knobValue = calculateKnobValue();
 
+  //perform speed calculation on an interval of SPEED_CALC_INTERVAL
+  if(currentMillis - lastMillis >= SPEED_CALC_INTERVAL && currentMillis > 500) {
+
+    if(DEBUG) {
+      Serial.print("analog knob: ");
+      Serial.println(knobValue);  
+    }
+    
+    long pulses = vssCounter - vssCounterPrevious;
+    vssCounterPrevious = vssCounter;
+
+    //calculate miles per hour
+    float pulsesPerSecond = (float)pulses * ((float)1000 / ((float)currentMillis - (float)lastMillis));
+    float pulsesPerMinute = pulsesPerSecond * 60.0;
+    float pulsesPerHour = pulsesPerMinute * 60.0;
+    float milesPerHour = pulsesPerHour / (float)PULSES_PER_MILE;
+    
+    if(bufferIndex >= BUFFER_LENGTH - 1) {
+      bufferIndex = 0;
+    }
+    else {
+      bufferIndex++;
+    }
+    mphBuffer[bufferIndex] = milesPerHour;
+
+    float mphSum = 0.0;
+    for(byte i = 0; i < BUFFER_LENGTH; i++) {
+      mphSum += mphBuffer[i];
+    }
+    float smoothedMPH = mphSum / (float)BUFFER_LENGTH;
+    if(DEBUG) {
+      Serial.print("MPH: ");
+      Serial.println(smoothedMPH);
+    }
+    sendToCan(smoothedMPH);
+    lastMillis = currentMillis;
+  }
+}
+
+byte calculateKnobValue() {
   if(knobBufferIndex >= KNOB_BUFFER_LENGTH - 1) {
     knobBufferIndex = 0;
   }
@@ -74,41 +114,7 @@ void loop() {
   else {
     previousKnobPosition = knobPosition;
   }
-  
-  //perform speed calculation on an interval of SPEED_CALC_INTERVAL
-  if(currentMillis - lastMillis >= SPEED_CALC_INTERVAL && currentMillis > 500) {
-
-    Serial.println(knobPosition);
-    
-    long pulses = vssCounter - vssCounterPrevious;
-    vssCounterPrevious = vssCounter;
-
-    //calculate miles per hour
-    float pulsesPerSecond = (float)pulses * ((float)1000 / ((float)currentMillis - (float)lastMillis));
-    float pulsesPerMinute = pulsesPerSecond * 60.0;
-    float pulsesPerHour = pulsesPerMinute * 60.0;
-    float milesPerHour = pulsesPerHour / (float)PULSES_PER_MILE;
-    
-    if(bufferIndex >= BUFFER_LENGTH - 1) {
-      bufferIndex = 0;
-    }
-    else {
-      bufferIndex++;
-    }
-    mphBuffer[bufferIndex] = milesPerHour;
-
-    float mphSum = 0.0;
-    for(byte i = 0; i < BUFFER_LENGTH; i++) {
-      mphSum += mphBuffer[i];
-    }
-    float smoothedMPH = mphSum / (float)BUFFER_LENGTH;
-    //Serial.println(smoothedMPH);
-    sendToCan(smoothedMPH);
-    lastMillis = currentMillis;
-
-
-
-  }
+  return knobPosition;
 }
 
 void calculateSpeed() {
