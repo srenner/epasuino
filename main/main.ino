@@ -27,7 +27,6 @@ byte knobBufferIndex = 0;
 int knobPosition = 0;
 int previousKnobPosition = 0;
 int knobBuffer[KNOB_BUFFER_LENGTH];
-byte assistLevel = 0;                                       //value that gets sent to digital pot
 
 //interrupt routine for interrupt 7 (pin 9)
 ISR(INT7_vect) {
