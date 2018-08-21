@@ -2,8 +2,9 @@
 #include <ASTCanLib.h>
 #include <math.h>
 
-#define DEBUG_KNOB true
+#define DEBUG_KNOB false
 #define DEBUG_MPH false
+#define DEBUG_AUTO true
 
 //pins used on board
 byte const MODE_PIN = 8;                                    //switch to select auto or manual potentiometer control
@@ -109,7 +110,20 @@ byte calculateManualKnobValue() {
 }
 
 byte calculateAutomaticKnobValue(float mph) {
-  return 50;
+  byte val = 255;
+  if(mph > 65.0) {
+    mph = 65.0;
+  }
+  else if(mph <= 5.0) {
+    mph = 0.0;
+  }
+  byte subtractBy = 255 - map(65.0 - mph, 0, 65, 0, 255);
+  val = val - subtractBy;
+  if(DEBUG_AUTO) {
+    Serial.print("digital knob: ");
+    Serial.println(val);
+  }
+  return val;  
 }
 
 void sendToPot(byte pos) {
