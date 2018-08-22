@@ -26,8 +26,9 @@ float mphBuffer[BUFFER_LENGTH];                             //keep buffer of mph
 byte mphBufferIndex = 0;
 byte knobBufferIndex = 0;
 int knobPosition = 0;
-int previousKnobPosition = 0;
+int previousKnobPosition = 0;                               //for the manual knob
 int knobBuffer[KNOB_BUFFER_LENGTH];
+byte previousVal = 255;                                     //for the automatic algorithm
 
 //interrupt routine for interrupt 7 (pin 9)
 ISR(INT7_vect) {
@@ -110,15 +111,39 @@ byte calculateManualKnobValue() {
 }
 
 byte calculateAutomaticKnobValue(float mph) {
-  byte val = 255;
-  if(mph > 65.0) {
-    mph = 65.0;
-  }
-  else if(mph <= 5.0) {
-    mph = 0.0;
-  }
-  byte subtractBy = 255 - map(65.0 - mph, 0, 65, 0, 255);
-  val = val - subtractBy;
+    byte val = 255;
+    if(mph > 65.0) {
+      mph = 65.0;
+    }
+    else if(mph <= 5.0) {
+      mph = 0.0;
+      val = 255;
+      previousVal = 255;
+    }
+    byte subtractBy = 255 - map(65.0 - mph, 0, 65, 0, 255);
+    val = val - subtractBy;
+
+    //if accelerating
+    if(val > previousVal) {
+      if((val - previousVal) > 5) {
+        val = previousVal + 6;
+      }
+      else {
+        val = previousVal;
+      }
+    }
+    //if decelerating
+    else if(val < previousVal) {
+      if((previousVal - val) > 4) {
+        val = previousVal - 5;
+      }
+      else {
+        val = previousVal;
+      }      
+    }
+
+    previousVal = val;
+
   if(DEBUG_AUTO) {
     Serial.print("digital knob: ");
     Serial.println(val);
