@@ -47,19 +47,31 @@ void version2() {
     }
     else if(mph <= 5.0) {
       mph = 0.0;
+      val = 255;
+      previousVal = 255;
     }
     byte subtractBy = 255 - map(65.0 - mph, 0, 65, 0, 255);
     val = val - subtractBy;
 
-    if((val - previousVal) > 3) {
-      val = previousVal + 3;
+    //if accelerating
+    if(val > previousVal) {
+      if((val - previousVal) > 5) {
+        val = previousVal + 6;
+      }
+      else {
+        val = previousVal;
+      }
     }
-    else if((previousVal - val) > 3) {
-      val = previousVal - 3;
+    //if decelerating
+    else if(val < previousVal) {
+      if((previousVal - val) > 4) {
+        val = previousVal - 5;
+      }
+      else {
+        val = previousVal;
+      }      
     }
-    else {
-      val = previousVal;
-    }
+
     previousVal = val;
     Serial.print("assist level ");
     Serial.print(val);
