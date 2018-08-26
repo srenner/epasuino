@@ -4,7 +4,7 @@
 
 #define DEBUG_KNOB false
 #define DEBUG_MPH false
-#define DEBUG_AUTO true
+#define DEBUG_AUTO false
 
 //pins used on board
 byte const MODE_PIN = 8;                                    //switch to select auto or manual potentiometer control
