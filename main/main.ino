@@ -2,7 +2,7 @@
 #include <ASTCanLib.h>
 #include <math.h>
 
-#define DEBUG_KNOB false
+#define DEBUG_KNOB true
 #define DEBUG_MPH false
 #define DEBUG_AUTO false
 
@@ -26,7 +26,8 @@ float mphBuffer[BUFFER_LENGTH];                             //keep buffer of mph
 byte mphBufferIndex = 0;
 byte knobBufferIndex = 0;
 int knobPosition = 0;
-int previousKnobPosition = 0;                               //for the manual knob
+int previousKnobPosition = 0;                               //for the manual knob (0-255)
+int previousKnobRaw = -1;                                   //for the manual knob (0-1023) init at -1 to know it hasn't been read yet
 int knobBuffer[KNOB_BUFFER_LENGTH];
 byte previousVal = 255;                                     //for the automatic algorithm
 
@@ -83,6 +84,13 @@ byte calculateManualKnobValue() {
     knobBufferIndex++;
   }
   knobPosition = analogRead(KNOB_PIN);
+  if(previousKnobRaw < 0) {
+    previousKnobRaw = knobPosition;
+  }
+  if(knobPosition > previousKnobRaw + 100) {
+    knobPosition = previousKnobRaw;
+  }
+  previousKnobRaw = knobPosition;
   knobBuffer[knobBufferIndex] = knobPosition;
   long knobSum = 0;
   for(int i = 0; i < KNOB_BUFFER_LENGTH; i++) {
