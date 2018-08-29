@@ -16,4 +16,4 @@ The user has access to a slide switch and a knob. When the switch is ON, the sof
 * [VR Conditioner Board](http://jbperf.com/dual_VR/v2_1.html)
 * On/off switch
 * 100k ohm digital potentiometer
-* 100k ohm analog potentiometer
+* 5k ohm analog potentiometer
