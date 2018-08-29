@@ -87,7 +87,7 @@ byte calculateManualKnobValue() {
   if(previousKnobRaw < 0) {
     previousKnobRaw = knobPosition;
   }
-  if(knobPosition > previousKnobRaw + 100) {
+  if(knobPosition == 1023 && knobPosition > previousKnobRaw + 100) {
     knobPosition = previousKnobRaw;
   }
   previousKnobRaw = knobPosition;
