@@ -84,6 +84,7 @@ byte calculateManualKnobValue() {
     knobBufferIndex++;
   }
   knobPosition = analogRead(KNOB_PIN);
+  int knobRaw = knobPosition;
   if(previousKnobRaw < 0) {
     previousKnobRaw = knobPosition;
   }
@@ -113,7 +114,7 @@ byte calculateManualKnobValue() {
   }
   if(DEBUG_KNOB) {
     Serial.print("analog knob: ");
-    Serial.println(knobPosition);  
+    Serial.println(knobRaw);  
   }
   return knobPosition;
 }
