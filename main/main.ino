@@ -110,11 +110,13 @@ byte calculateManualKnobValue() {
     knobPosition = previousKnobPosition;
   }
   else {
+    if(DEBUG_KNOB) {
+      Serial.print("analog knob: ");
+      Serial.print(knobPosition);
+      Serial.print(" @ ");
+      Serial.println(millis());  
+    }
     previousKnobPosition = knobPosition;
-  }
-  if(DEBUG_KNOB) {
-    Serial.print("analog knob: ");
-    Serial.println(knobRaw);  
   }
   return knobPosition;
 }
