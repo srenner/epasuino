@@ -14,6 +14,5 @@ The user will use a 6 way rotary switch to control the base amount of steering a
 * [SparkFun AST-CAN485 Dev Board](https://www.sparkfun.com/products/14483)
 * [Ford 8,000 pulse per mile speed sensor](https://lmr.com/item/LRS-9731B/83-93-Mustang-Speed-Sensor)
 * [VR Conditioner Board](http://jbperf.com/dual_VR/v2_1.html)
-* On/off switch
 * 100k ohm digital potentiometer
-* analog potentiometer (under 20kΩ recommended)
+* 1 Pole 6 Throw Band Channel Rotary Switch Selector
