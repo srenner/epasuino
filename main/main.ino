@@ -15,7 +15,7 @@ byte const KNOB_PIN = 14;                                   //analog pin 0
 unsigned const int PULSES_PER_MILE = 8000;                  //typical early Ford speed sensor
 byte const SPEED_CALC_INTERVAL = 125;                       //read number of pulses approx every 1/8 second
 byte const BUFFER_LENGTH = 4;                               //length of MPH buffer
-byte const KNOB_BUFFER_LENGTH = 32;                         //length of potentiometer buffer
+byte const KNOB_BUFFER_LENGTH = 255;                        //length of potentiometer buffer
 
 bool automaticMode = 0;                                     //1 = automatic (speed sensitive), 0 = manual (user turns knob)
 volatile unsigned long vssCounter = 0;                      //increment pulses in the interrupt function
@@ -30,6 +30,7 @@ int previousKnobPosition = 0;                               //for the manual kno
 int previousKnobRaw = -1;                                   //for the manual knob (0-1023) init at -1 to know it hasn't been read yet
 int knobBuffer[KNOB_BUFFER_LENGTH];
 byte previousVal = 255;                                     //for the automatic algorithm
+int previousKnobRawAverage = 0;
 
 //interrupt routine for interrupt 7 (pin 9)
 ISR(INT7_vect) {
@@ -83,22 +84,41 @@ byte calculateManualKnobValue() {
   else {
     knobBufferIndex++;
   }
-  knobPosition = analogRead(KNOB_PIN);
-  int knobRaw = knobPosition;
+  int knobRaw = analogRead(KNOB_PIN);
+
+  //the particular pot i am using is not bottoming out its value, so force it to
+  if(knobRaw < 200) {
+    knobRaw = 0;
+  }
+
+  
   if(previousKnobRaw < 0) {
-    previousKnobRaw = knobPosition;
+    previousKnobRaw = knobRaw;
   }
-  if(knobPosition == 1023 && knobPosition > previousKnobRaw + 100) {
-    knobPosition = previousKnobRaw;
+  if(knobRaw > 800 && (knobRaw > (previousKnobRaw + 100))) {
+    //Serial.println("filtered");
+    knobRaw = previousKnobRaw;
   }
-  previousKnobRaw = knobPosition;
-  knobBuffer[knobBufferIndex] = knobPosition;
+
+  if(knobRaw > 150) {
+    //Serial.println(knobRaw);
+  }
+
+  if(knobRaw > previousKnobRaw) {
+    knobRaw++;
+  }
+  else if(knobRaw < previousKnobRaw) {
+    knobRaw--;
+  }
+  
+  previousKnobRaw = knobRaw;
+  knobBuffer[knobBufferIndex] = knobRaw;
   long knobSum = 0;
   for(int i = 0; i < KNOB_BUFFER_LENGTH; i++) {
     knobSum += knobBuffer[i];
   }
-  knobPosition = knobSum / KNOB_BUFFER_LENGTH;
-  knobPosition = map(knobPosition, 0, 1023, 0, 255);
+  previousKnobRawAverage = knobSum / KNOB_BUFFER_LENGTH;
+  knobPosition = map(previousKnobRawAverage, 0, 1023, 0, 255);
   if(knobPosition < 5) {
     knobPosition = 0;
   }
