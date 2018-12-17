@@ -7,9 +7,7 @@
 #define DEBUG_AUTO false
 
 //pins used on board
-byte const MODE_PIN = 8;                                    //switch to select auto or manual potentiometer control
 byte const VSS_PIN = 9;                                     //pin 9 on the board corresponds to interrupt 7 on the chip
-byte const KNOB_PIN = 14;                                   //analog pin 0
 
 //other constants
 unsigned const int PULSES_PER_MILE = 8000;                  //typical early Ford speed sensor
@@ -24,13 +22,7 @@ unsigned long currentMillis = 0;                            //now
 unsigned long lastMillis = 0;                               //used to cut time into slices of SPEED_CALC_INTERVAL
 float mphBuffer[BUFFER_LENGTH];                             //keep buffer of mph readings (approx .5 second)
 byte mphBufferIndex = 0;
-byte knobBufferIndex = 0;
-int knobPosition = 0;
-int previousKnobPosition = 0;                               //for the manual knob (0-255)
-int previousKnobRaw = -1;                                   //for the manual knob (0-1023) init at -1 to know it hasn't been read yet
-int knobBuffer[KNOB_BUFFER_LENGTH];
 byte previousVal = 255;                                     //for the automatic algorithm
-int previousKnobRawAverage = 0;
 
 //interrupt routine for interrupt 7 (pin 9)
 ISR(INT7_vect) {
@@ -40,7 +32,6 @@ ISR(INT7_vect) {
 void setup() {
   Serial.begin(9600);
   pinMode(VSS_PIN, INPUT_PULLUP);
-  pinMode(MODE_PIN, INPUT);
   //set trigger for interrupt 7 (pin 9) to be falling edge (see datasheet)
   EICRB |= ( 1 << ISC71);
   EICRB |= ( 0 << ISC70);
@@ -54,91 +45,14 @@ void setup() {
 void loop() {
   currentMillis = millis();
   
-  //calculate this in every loop iteration to keep the buffer current
-  byte analogKnobLevel = calculateManualKnobValue();
-  
   //perform speed calculation on an interval of SPEED_CALC_INTERVAL
   if(currentMillis - lastMillis >= SPEED_CALC_INTERVAL && currentMillis > 500) {
     
     //calculate miles per hour
-    float mph = calculateSpeed();    
-
-    automaticMode = digitalRead(MODE_PIN);
-    if(automaticMode) {
-      byte digitalKnobLevel = calculateAutomaticKnobValue(mph);
-      sendToPot(digitalKnobLevel);
-    }
-    else {
-      sendToPot(analogKnobLevel);
-    }
-    
+    float mph = calculateSpeed();
     sendToCan(mph);
     lastMillis = currentMillis;
   }
-}
-
-byte calculateManualKnobValue() {
-  if(knobBufferIndex >= KNOB_BUFFER_LENGTH - 1) {
-    knobBufferIndex = 0;
-  }
-  else {
-    knobBufferIndex++;
-  }
-  int knobRaw = analogRead(KNOB_PIN);
-
-  //the particular pot i am using is not bottoming out its value, so force it to
-  if(knobRaw < 200) {
-    knobRaw = 0;
-  }
-
-  
-  if(previousKnobRaw < 0) {
-    previousKnobRaw = knobRaw;
-  }
-  if(knobRaw > 800 && (knobRaw > (previousKnobRaw + 100))) {
-    //Serial.println("filtered");
-    knobRaw = previousKnobRaw;
-  }
-
-  if(knobRaw > 150) {
-    //Serial.println(knobRaw);
-  }
-
-  if(knobRaw > previousKnobRaw) {
-    knobRaw++;
-  }
-  else if(knobRaw < previousKnobRaw) {
-    knobRaw--;
-  }
-  
-  previousKnobRaw = knobRaw;
-  knobBuffer[knobBufferIndex] = knobRaw;
-  long knobSum = 0;
-  for(int i = 0; i < KNOB_BUFFER_LENGTH; i++) {
-    knobSum += knobBuffer[i];
-  }
-  previousKnobRawAverage = knobSum / KNOB_BUFFER_LENGTH;
-  knobPosition = map(previousKnobRawAverage, 0, 1023, 0, 255);
-  if(knobPosition < 5) {
-    knobPosition = 0;
-  }
-  if(knobPosition > 250) {
-    knobPosition = 255;
-  }
-  if(abs(knobPosition - previousKnobPosition) < 5) {
-    //knob position didn't actually change
-    knobPosition = previousKnobPosition;
-  }
-  else {
-    if(DEBUG_KNOB) {
-      Serial.print("analog knob: ");
-      Serial.print(knobPosition);
-      Serial.print(" @ ");
-      Serial.println(millis());  
-    }
-    previousKnobPosition = knobPosition;
-  }
-  return knobPosition;
 }
 
 byte calculateAutomaticKnobValue(float mph) {
