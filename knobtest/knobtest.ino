@@ -16,10 +16,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-  //Serial.println(digitalRead(POS_1_PIN));
-
   if(!digitalRead(POS_1_PIN)) {
     Serial.println(1);
   }
