@@ -8,6 +8,12 @@
 
 //pins used on board
 byte const VSS_PIN = 9;                                     //pin 9 on the board corresponds to interrupt 7 on the chip
+byte const POS_1_PIN = 2;
+byte const POS_2_PIN = 3;
+byte const POS_3_PIN = 4;
+byte const POS_4_PIN = 5;
+byte const POS_5_PIN = 6;
+byte const POS_6_PIN = 7;
 
 //other constants
 unsigned const int PULSES_PER_MILE = 8000;                  //typical early Ford speed sensor
@@ -15,6 +21,7 @@ byte const SPEED_CALC_INTERVAL = 125;                       //read number of pul
 byte const BUFFER_LENGTH = 4;                               //length of MPH buffer
 byte const KNOB_BUFFER_LENGTH = 255;                        //length of potentiometer buffer
 
+byte assistMode = 5;                                        //5 = medium/high static assist
 bool automaticMode = 0;                                     //1 = automatic (speed sensitive), 0 = manual (user turns knob)
 volatile unsigned long vssCounter = 0;                      //increment pulses in the interrupt function
 unsigned long vssCounterPrevious = 0;                       //used to calculate speed
@@ -32,6 +39,13 @@ ISR(INT7_vect) {
 void setup() {
   Serial.begin(9600);
   pinMode(VSS_PIN, INPUT_PULLUP);
+  pinMode(POS_1_PIN, INPUT_PULLUP);
+  pinMode(POS_2_PIN, INPUT_PULLUP);
+  pinMode(POS_3_PIN, INPUT_PULLUP);
+  pinMode(POS_4_PIN, INPUT_PULLUP);
+  pinMode(POS_5_PIN, INPUT_PULLUP);
+  pinMode(POS_6_PIN, INPUT_PULLUP);
+  
   //set trigger for interrupt 7 (pin 9) to be falling edge (see datasheet)
   EICRB |= ( 1 << ISC71);
   EICRB |= ( 0 << ISC70);
@@ -51,8 +65,39 @@ void loop() {
     //calculate miles per hour
     float mph = calculateSpeed();
     sendToCan(mph);
+
+    //calculate assist level
+    byte newAssistMode = getMode();
+    if(newAssistMode != assistMode) {
+      Serial.print("new assist mode: ");
+      Serial.println(newAssistMode);
+    }
+    assistMode = newAssistMode;
     lastMillis = currentMillis;
   }
+}
+
+byte getMode() {
+  byte mode = 5;
+  if(!digitalRead(POS_1_PIN)) {
+    mode = 1;
+  }
+  else if(!digitalRead(POS_2_PIN)) {
+    mode = 2;
+  }
+  else if(!digitalRead(POS_3_PIN)) {
+    mode = 3;
+  }
+  else if(!digitalRead(POS_4_PIN)) {
+    mode = 4;
+  }
+  else if(!digitalRead(POS_5_PIN)) {
+    mode = 5;
+  }
+  else if(!digitalRead(POS_6_PIN)) {
+    mode = 6;
+  }
+  return mode;
 }
 
 byte calculateAutomaticKnobValue(float mph) {
