@@ -22,7 +22,6 @@ byte const BUFFER_LENGTH = 4;                               //length of MPH buff
 byte const KNOB_BUFFER_LENGTH = 255;                        //length of potentiometer buffer
 
 byte assistMode = 5;                                        //5 = medium/high static assist
-bool automaticMode = 0;                                     //1 = automatic (speed sensitive), 0 = manual (user turns knob)
 volatile unsigned long vssCounter = 0;                      //increment pulses in the interrupt function
 unsigned long vssCounterPrevious = 0;                       //used to calculate speed
 unsigned long currentMillis = 0;                            //now
@@ -30,6 +29,9 @@ unsigned long lastMillis = 0;                               //used to cut time i
 float mphBuffer[BUFFER_LENGTH];                             //keep buffer of mph readings (approx .5 second)
 byte mphBufferIndex = 0;
 byte previousVal = 255;                                     //for the automatic algorithm
+
+byte assistValue = 0;
+byte newAssistValue = 0;
 
 //interrupt routine for interrupt 7 (pin 9)
 ISR(INT7_vect) {
@@ -71,14 +73,41 @@ void loop() {
     if(newAssistMode != assistMode) {
       Serial.print("new assist mode: ");
       Serial.println(newAssistMode);
+      assistMode = newAssistMode;
     }
-    assistMode = newAssistMode;
+
+    switch(assistMode) {
+      case 1:
+        newAssistValue = calculateMode1(mph);
+        break;
+      case 2:
+        newAssistValue = calculateMode2(mph);
+        break;
+      case 3:
+        newAssistValue = calculateMode3(mph);
+        break;
+      case 4:
+        newAssistValue = calculateMode4(mph);
+        break;
+      case 5:
+        newAssistValue = calculateMode5(mph);
+        break;
+      case 6:
+        newAssistValue = calculateMode6(mph);
+        break;
+    }
+
+    if(newAssistValue != assistValue) {
+      sendToPot(newAssistValue);
+      assistValue = newAssistValue;
+    }
+    
     lastMillis = currentMillis;
   }
 }
 
 byte getMode() {
-  byte mode = 5;
+  byte mode = 0;
   if(!digitalRead(POS_1_PIN)) {
     mode = 1;
   }
@@ -98,6 +127,35 @@ byte getMode() {
     mode = 6;
   }
   return mode;
+}
+
+byte calculateMode1(float mph) {
+  return 0;
+}
+
+byte calculateMode2(float mph) {
+  if(mph < 10.0f) {
+    return 180;
+  }
+  else {
+    return 25;
+  }
+}
+
+byte calculateMode3(float mph) {
+  
+}
+
+byte calculateMode4(float mph) {
+  
+}
+
+byte calculateMode5(float mph) {
+  return 185;
+}
+
+byte calculateMode6(float mph) {
+  return 255;
 }
 
 byte calculateAutomaticKnobValue(float mph) {
@@ -142,7 +200,8 @@ byte calculateAutomaticKnobValue(float mph) {
 }
 
 void sendToPot(byte pos) {
-  
+  Serial.print("setting digital knob to position ");
+  Serial.println(pos);
 }
 
 float calculateSpeed() {
