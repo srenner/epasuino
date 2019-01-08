@@ -4,7 +4,6 @@
 
 #define DEBUG_KNOB true
 #define DEBUG_MPH false
-#define DEBUG_AUTO false
 
 //pins used on board
 byte const VSS_PIN = 9;                                     //pin 9 on the board corresponds to interrupt 7 on the chip
@@ -197,16 +196,15 @@ byte calculateAutomaticKnobValue(float mph) {
 
     previousVal = val;
 
-  if(DEBUG_AUTO) {
-    Serial.print("digital knob: ");
-    Serial.println(val);
-  }
   return val;  
 }
 
 void sendToPot(byte pos) {
-  Serial.print("setting digital knob to position ");
-  Serial.println(pos);
+  if(DEBUG_KNOB) {
+    Serial.print("setting digital knob to position ");
+    Serial.println(pos);  
+  }
+  //todo
 }
 
 float calculateSpeed() {
