@@ -132,10 +132,10 @@ byte calculateMode1(float mph) {
   return 0;
 }
 
-//~50% power steering for parking lot speeds, almost none when faster
+//~2/3 power assist for parking lot speeds, almost none when faster
 byte calculateMode2(float mph) {
   if(mph < 10.0f) {
-    return 180;
+    return 170;
   }
   else {
     return 25;
@@ -152,9 +152,9 @@ byte calculateMode4(float mph) {
   
 }
 
-//constant moderate power assist
+//constant ~2/3 power assist
 byte calculateMode5(float mph) {
-  return 185;
+  return 170;
 }
 
 //full power assist at all times
