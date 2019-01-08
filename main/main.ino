@@ -128,10 +128,12 @@ byte getMode(byte previousMode) {
   return mode;
 }
 
+//no power steering
 byte calculateMode1(float mph) {
   return 0;
 }
 
+//~50% power steering for parking lot speeds, almost none when faster
 byte calculateMode2(float mph) {
   if(mph < 10.0f) {
     return 180;
@@ -141,18 +143,22 @@ byte calculateMode2(float mph) {
   }
 }
 
+//sport mode speed sensitive power assist
 byte calculateMode3(float mph) {
   
 }
 
+//comfort mode speed sensitive power assist
 byte calculateMode4(float mph) {
   
 }
 
+//constant moderate power assist
 byte calculateMode5(float mph) {
   return 185;
 }
 
+//full power assist at all times
 byte calculateMode6(float mph) {
   return 255;
 }
