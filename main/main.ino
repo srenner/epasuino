@@ -64,12 +64,11 @@ void loop() {
   //perform speed calculation on an interval of SPEED_CALC_INTERVAL
   if(currentMillis - lastMillis >= SPEED_CALC_INTERVAL && currentMillis > 500) {
     
-    //calculate miles per hour
     float mph = calculateSpeed();
     sendToCan(mph);
 
     //calculate assist level
-    byte newAssistMode = getMode();
+    byte newAssistMode = getMode(assistMode);
     if(newAssistMode != assistMode) {
       Serial.print("new assist mode: ");
       Serial.println(newAssistMode);
@@ -106,8 +105,8 @@ void loop() {
   }
 }
 
-byte getMode() {
-  byte mode = 0;
+byte getMode(byte previousMode) {
+  byte mode = previousMode;
   if(!digitalRead(POS_1_PIN)) {
     mode = 1;
   }
@@ -211,7 +210,6 @@ float calculateSpeed() {
     float pulsesPerMinute = pulsesPerSecond * 60.0;
     float pulsesPerHour = pulsesPerMinute * 60.0;
     float milesPerHour = pulsesPerHour / (float)PULSES_PER_MILE;
-    
     if(mphBufferIndex >= BUFFER_LENGTH - 1) {
       mphBufferIndex = 0;
     }
@@ -219,18 +217,15 @@ float calculateSpeed() {
       mphBufferIndex++;
     }
     mphBuffer[mphBufferIndex] = milesPerHour;
-
     float mphSum = 0.0;
     for(byte i = 0; i < BUFFER_LENGTH; i++) {
       mphSum += mphBuffer[i];
     }
     float smoothedMPH = mphSum / (float)BUFFER_LENGTH;
-
     if(DEBUG_MPH) {
       Serial.print("MPH: ");
       Serial.println(smoothedMPH);
     }
-    
     return smoothedMPH;
 }
 
