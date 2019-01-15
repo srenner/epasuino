@@ -29,7 +29,7 @@ float mphBuffer[BUFFER_LENGTH];                             //keep buffer of mph
 byte mphBufferIndex = 0;
 byte previousVal = 255;                                     //for the automatic algorithm
 
-byte assistValue = 0;
+byte oldAssistValue = 0;
 byte newAssistValue = 0;
 
 //interrupt routine for interrupt 7 (pin 9)
@@ -95,9 +95,9 @@ void loop() {
         break;
     }
 
-    if(newAssistValue != assistValue) {
+    if(newAssistValue != oldAssistValue) {
       sendToPot(newAssistValue);
-      assistValue = newAssistValue;
+      oldAssistValue = newAssistValue;
     }
     
     lastMillis = currentMillis;
@@ -144,12 +144,12 @@ byte calculateMode2(float mph) {
 
 //sport mode speed sensitive power assist
 byte calculateMode3(float mph) {
-  
+  return calculateSpeedSensitiveAssist(mph, 65, 140, 5);
 }
 
 //comfort mode speed sensitive power assist
 byte calculateMode4(float mph) {
-  
+  return calculateSpeedSensitiveAssist(mph, 100, 170, 3);
 }
 
 //constant ~2/3 power assist
@@ -160,6 +160,33 @@ byte calculateMode5(float mph) {
 //full power assist at all times
 byte calculateMode6(float mph) {
   return 255;
+}
+
+byte calculateSpeedSensitiveAssist(float mph, byte minAssist, byte maxAssist, byte maxChange) {
+  
+  byte ret = oldAssistValue;
+  byte targetAssist;
+  
+  //no adjustments made above 65mph or below 10mph
+  if(mph > 65.0) {
+    targetAssist = minAssist;
+  }
+  else if(mph < 10.0) {
+    targetAssist = maxAssist;
+  }
+
+
+  if(targetAssist > oldAssistValue + maxChange) {
+    ret += maxChange;
+  }
+  else if(targetAssist < oldAssistValue - maxChange) {
+    ret -= maxChange;
+  }
+  else {
+    ret = targetAssist;
+  }
+
+  return ret;
 }
 
 byte calculateAutomaticKnobValue(float mph) {
