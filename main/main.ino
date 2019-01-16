@@ -183,7 +183,7 @@ byte calculateSpeedSensitiveAssist(float mph, byte minAssist, byte maxAssist, by
     targetAssist = maxAssist;
   }
   else {
-    targetAssist = map(mph, 10, 65, 0, 255);
+    targetAssist = map(mph, 10, 65, maxAssist, minAssist);
   }
   if((targetAssist) > (oldAssistValue + maxChange)) {
     ret += maxChange;
