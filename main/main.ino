@@ -127,7 +127,7 @@ byte getMode(byte previousMode) {
   return mode;
 }
 
-//no power steering
+//no power assist
 byte calculateMode1(float mph) {
   return 0;
 }
@@ -144,15 +144,15 @@ byte calculateMode2(float mph) {
 
 //sport mode speed sensitive power assist
 byte calculateMode3(float mph) {
-  return calculateSpeedSensitiveAssist(mph, 65, 140, 5);
+  return calculateSpeedSensitiveAssist(mph, 65, 140, 20, 15);
 }
 
 //comfort mode speed sensitive power assist
 byte calculateMode4(float mph) {
-  return calculateSpeedSensitiveAssist(mph, 100, 170, 3);
+  return calculateSpeedSensitiveAssist(mph, 100, 170, 15, 10);
 }
 
-//constant ~2/3 power assist
+//~2/3 power assist at all times
 byte calculateMode5(float mph) {
   return 170;
 }
@@ -162,7 +162,15 @@ byte calculateMode6(float mph) {
   return 255;
 }
 
-byte calculateSpeedSensitiveAssist(float mph, byte minAssist, byte maxAssist, byte maxChange) {
+/*
+ * mph:             current speed of the vehicle
+ * minAssist:       minimum assist value (at higher speed)
+ * maxAssist:       maximum assist value (low speed)
+ * maxChange:       how much the assist value can change in a single execution
+ * ignoreThreshold: don't change assist at all if target is this close to current
+ * returns:         level of assist to send to the steering ECU
+ */
+byte calculateSpeedSensitiveAssist(float mph, byte minAssist, byte maxAssist, byte maxChange, byte ignoreThreshold) {
   
   byte ret = oldAssistValue;
   byte targetAssist;
@@ -174,18 +182,21 @@ byte calculateSpeedSensitiveAssist(float mph, byte minAssist, byte maxAssist, by
   else if(mph < 10.0) {
     targetAssist = maxAssist;
   }
-
-
-  if(targetAssist > oldAssistValue + maxChange) {
+  else {
+    targetAssist = map(mph, 10, 65, 0, 255);
+  }
+  if((targetAssist) > (oldAssistValue + maxChange)) {
     ret += maxChange;
   }
-  else if(targetAssist < oldAssistValue - maxChange) {
+  else if((targetAssist) < (oldAssistValue - maxChange)) {
     ret -= maxChange;
+  }
+  else if (abs(targetAssist - oldAssistValue) < ignoreThreshold) {
+    ret = oldAssistValue;
   }
   else {
     ret = targetAssist;
   }
-
   return ret;
 }
 
