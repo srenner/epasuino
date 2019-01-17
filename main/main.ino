@@ -27,7 +27,6 @@ unsigned long currentMillis = 0;                            //now
 unsigned long lastMillis = 0;                               //used to cut time into slices of SPEED_CALC_INTERVAL
 float mphBuffer[BUFFER_LENGTH];                             //keep buffer of mph readings (approx .5 second)
 byte mphBufferIndex = 0;
-byte previousVal = 255;                                     //for the automatic algorithm
 
 byte oldAssistValue = 0;
 byte newAssistValue = 0;
@@ -200,43 +199,6 @@ byte calculateSpeedSensitiveAssist(float mph, byte minAssist, byte maxAssist, by
   return ret;
 }
 
-byte calculateAutomaticKnobValue(float mph) {
-    byte val = 255;
-    if(mph > 65.0) {
-      mph = 65.0;
-    }
-    else if(mph <= 5.0) {
-      mph = 0.0;
-      val = 255;
-      previousVal = 255;
-    }
-    byte subtractBy = 255 - map(65.0 - mph, 0, 65, 0, 255);
-    val = val - subtractBy;
-
-    //if accelerating
-    if(val > previousVal) {
-      if((val - previousVal) > 5) {
-        val = previousVal + 6;
-      }
-      else {
-        val = previousVal;
-      }
-    }
-    //if decelerating
-    else if(val < previousVal) {
-      if((previousVal - val) > 4) {
-        val = previousVal - 5;
-      }
-      else {
-        val = previousVal;
-      }      
-    }
-
-    previousVal = val;
-
-  return val;  
-}
-
 void sendToPot(byte pos) {
   if(DEBUG_KNOB) {
     Serial.print("setting digital knob to position ");
@@ -247,28 +209,28 @@ void sendToPot(byte pos) {
 
 float calculateSpeed() {
   long pulses = vssCounter - vssCounterPrevious;
-    vssCounterPrevious = vssCounter;
-    float pulsesPerSecond = (float)pulses * ((float)1000 / ((float)currentMillis - (float)lastMillis));
-    float pulsesPerMinute = pulsesPerSecond * 60.0;
-    float pulsesPerHour = pulsesPerMinute * 60.0;
-    float milesPerHour = pulsesPerHour / (float)PULSES_PER_MILE;
-    if(mphBufferIndex >= BUFFER_LENGTH - 1) {
-      mphBufferIndex = 0;
-    }
-    else {
-      mphBufferIndex++;
-    }
-    mphBuffer[mphBufferIndex] = milesPerHour;
-    float mphSum = 0.0;
-    for(byte i = 0; i < BUFFER_LENGTH; i++) {
-      mphSum += mphBuffer[i];
-    }
-    float smoothedMPH = mphSum / (float)BUFFER_LENGTH;
-    if(DEBUG_MPH) {
-      Serial.print("MPH: ");
-      Serial.println(smoothedMPH);
-    }
-    return smoothedMPH;
+  vssCounterPrevious = vssCounter;
+  float pulsesPerSecond = (float)pulses * ((float)1000 / ((float)currentMillis - (float)lastMillis));
+  float pulsesPerMinute = pulsesPerSecond * 60.0;
+  float pulsesPerHour = pulsesPerMinute * 60.0;
+  float milesPerHour = pulsesPerHour / (float)PULSES_PER_MILE;
+  if(mphBufferIndex >= BUFFER_LENGTH - 1) {
+    mphBufferIndex = 0;
+  }
+  else {
+    mphBufferIndex++;
+  }
+  mphBuffer[mphBufferIndex] = milesPerHour;
+  float mphSum = 0.0;
+  for(byte i = 0; i < BUFFER_LENGTH; i++) {
+    mphSum += mphBuffer[i];
+  }
+  float smoothedMPH = mphSum / (float)BUFFER_LENGTH;
+  if(DEBUG_MPH) {
+    Serial.print("MPH: ");
+    Serial.println(smoothedMPH);
+  }
+  return smoothedMPH;
 }
 
 void sendToCan(float mph) {
